@@ -3,10 +3,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Est-ce que mon lait est bon?</title>
+    <title>Est-ce que mon lait est encore bon pour bébé?</title>
   </head>
   <body onload="initTable()">
-    <h1>Mon lait est-il toujours bon ?</h1>
+    <h1>Est-ce que mon lait est encore bon pour bébé?</h1>
     <table id="history">
       <tr>
         <th>Temps passé</th>
@@ -57,7 +57,7 @@
       select += '</select>';
       row.insertCell(1).innerHTML = select;
 
-      row.insertCell(2).innerHTML = '<button type="addEntry" onclick="addEntry()">Valider...</button>';
+      row.insertCell(2).innerHTML = '<button type="addEntry" onclick="addEntry()">Ajouter cette durée...</button>';
       row.insertCell(3).innerHTML = '...';
 
     }
