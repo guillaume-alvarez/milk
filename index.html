@@ -1,0 +1,146 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Est-ce que mon lait est bon?</title>
+  </head>
+  <body onload="initTable()">
+    <h1>Mon lait est-il toujours bon ?</h1>
+    <table id="history">
+      <tr>
+        <th>Temps passé</th>
+        <th>Conditions</th>
+        <th>(Max possible)</th>
+        <th>(Vie restante)</th>
+      </tr>
+    </table>
+    <h1 id="result">Veuillez entrer les informations dans le tableau...</h1>
+  </body>
+
+  <script type="text/javascript">
+    var conditions = {
+      "ambiant" : {
+        label : "Température ambiante (19 à 22°)",
+        time : "4 heures"
+      },
+      "15deg" : {
+        label : "glacière électrique (15°)",
+        time : "24 heures"
+      },
+      "refrigerateur" : {
+        label : "Réfrigérateur (0 à 4°)",
+        time : "8 jours"
+      },
+      "freezer" : {
+        label : "Compartiement freezer d'un réfrigérateur (0 à -18°)",
+        time : "2 semaines"
+      },
+      "surgele3x" : {
+        label : "Compartiment surgelé 3* (-18°)",
+        time : "3 mois"
+      },
+      "surgele" : {
+        label : "Congélateur indépendant (-18°)",
+        time : "6 mois"
+      },
+    };
+
+    function initTable() {
+      var table = document.getElementById("history");
+      var row = table.insertRow(1);
+      row.insertCell(0).innerHTML = '<input id="time" type="text"  name="time" value="1h">';
+
+      var select = '<select id="conditions" >';
+      for (var c in conditions)
+      select += '<option value="' + c + '">' + conditions[c].label + '</option>';
+      select += '</select>';
+      row.insertCell(1).innerHTML = select;
+
+      row.insertCell(2).innerHTML = '<button type="addEntry" onclick="addEntry()">Valider...</button>';
+      row.insertCell(3).innerHTML = '...';
+
+    }
+
+    function addEntry() {
+      var time = document.getElementById('time');
+      var cond = document.getElementById('conditions');
+
+      var table = document.getElementById("history");
+      var row = table.insertRow(table.rows.length - 1);
+      row.insertCell(0).innerHTML = time.value;
+
+      var selected = conditions[cond.options[cond.options.selectedIndex].value];
+      row.insertCell(1).innerHTML = selected.label;
+      row.insertCell(2).innerHTML = "max=" + selected.time;
+      row.insertCell(3).innerHTML = '...';
+
+      computeResult();
+    }
+
+    function getSeconds(str) {
+      var seconds = 0;
+      var months = str.match(/(\d+)\s*(mois|month|months)/);
+      var weeks = str.match(/(\d+)\s*(w|semaine|semaines|week|weeks)/);
+      var days = str.match(/(\d+)\s*(j|jour|jours|day|days)/);
+      var hours = str.match(/(\d+)\s*(h|heure|heures|hour|hours)/);
+      var minutes = str.match(/(\d+)\s*(mn|minute|minutes)/);
+
+      if (months)
+        seconds += parseInt(months[1]) * 86400 * 30;
+      if (weeks)
+        seconds += parseInt(weeks[1]) * 86400 * 7;
+      if (days)
+        seconds += parseInt(days[1]) * 86400;
+      if (hours)
+        seconds += parseInt(hours[1]) * 3600;
+      if (minutes)
+        seconds += parseInt(minutes[1]) * 60;
+      return seconds;
+    }
+
+    function getTimeString(seconds) {
+      var numyears = Math.floor(seconds / 31536000);
+      var numdays = Math.floor((seconds % 31536000) / 86400);
+      var numhours = Math.floor(((seconds % 31536000) % 86400) / 3600);
+      var numminutes = Math.floor((((seconds % 31536000) % 86400) % 3600) / 60);
+      var numseconds = (((seconds % 31536000) % 86400) % 3600) % 60;
+
+      var str = "";
+      if (numyears)
+        str += numyears + " ans ";
+      if (numdays)
+        str += numdays + " jours ";
+      if (numhours)
+        str += numhours + " heures ";
+      if (numminutes)
+        str += numminutes + " minutes ";
+      return str;
+    }
+
+    function computeResult() {
+      var table = document.getElementById("history");
+      var remains = 1.0;
+      var max;
+      for (var i = 1; i < table.rows.length - 1; i++) {
+        var row = table.rows[i];
+        var spent = row.cells[0].innerHTML;
+        max = row.cells[2].innerHTML.replace("max=", "");
+        var consumed = getSeconds(spent) / getSeconds(max);
+        remains -= consumed;
+        row.cells[3].innerHTML = (remains * 100.0) + "%";
+      }
+
+      var result = document.getElementById("result");
+      if (remains > 0) {
+        if (max)
+          result.innerHTML = "Le lait est encore bon <u>" + getTimeString(getSeconds(max) * remains).trim() + "</u>.";
+        else
+          result.innerHTML = "Veuillez entrer les informations dans le tableau...";
+      } else {
+        result.innerHTML = "Jetez ce lait!!!";
+      }
+    }
+
+  </script>
+</html>
