@@ -11,8 +11,8 @@
       <tr>
         <th>Temps passé</th>
         <th>Conditions</th>
-        <th>(Max possible)</th>
-        <th>(Vie restante)</th>
+        <th>Maximum</th>
+        <th colspan="2">Durée de vie restante</th>
       </tr>
     </table>
     <h1 id="result">Veuillez entrer les informations dans le tableau...</h1>
@@ -48,21 +48,27 @@
         time : "6 mois"
       },
     };
+    
+    var TIME_COL = 0;
+    var COND_COL = 1;
+    var MAX_COL = 2;
+    var PERCENT_COL = 3;
+    var BAR_COL = 4;
 
     function initTable() {
       var table = document.getElementById("history");
       var row = table.insertRow(1);
-      row.insertCell(0).innerHTML = '<input id="time" type="text"  name="time" value="1h">';
+      row.insertCell(TIME_COL).innerHTML = '<input id="time" type="text"  name="time" value="1h">';
 
       var select = '<select id="conditions" >';
       for (var c in conditions)
       select += '<option value="' + c + '">' + conditions[c].label + '</option>';
       select += '</select>';
-      row.insertCell(1).innerHTML = select;
+      row.insertCell(COND_COL).innerHTML = select;
 
-      row.insertCell(2).innerHTML = '<button type="addEntry" onclick="addEntry()">Ajouter cette durée...</button>';
-      row.insertCell(3).innerHTML = '...';
-
+      row.insertCell(MAX_COL).innerHTML = '<button type="addEntry" onclick="addEntry()">Ajouter cette durée...</button>';
+      row.insertCell(PERCENT_COL).innerHTML = '...';
+      row.insertCell(BAR_COL).innerHTML = '';
     }
 
     function addEntry() {
@@ -71,14 +77,40 @@
 
       var table = document.getElementById("history");
       var row = table.insertRow(table.rows.length - 1);
-      row.insertCell(0).innerHTML = time.value;
+      row.insertCell(TIME_COL).innerHTML = time.value;
 
       var selected = conditions[cond.options[cond.options.selectedIndex].value];
-      row.insertCell(1).innerHTML = selected.label;
-      row.insertCell(2).innerHTML = "max=" + selected.time;
-      row.insertCell(3).innerHTML = '...';
+      row.insertCell(COND_COL).innerHTML = selected.label;
+      row.insertCell(MAX_COL).innerHTML = "max=" + selected.time;
+      row.insertCell(PERCENT_COL).innerHTML = '...';
+      row.insertCell(BAR_COL).innerHTML = '';
 
       computeResult();
+    }
+
+    function computeResult() {
+      var table = document.getElementById("history");
+      var remains = 1.0;
+      var max;
+      for (var i = 1; i < table.rows.length - 1; i++) {
+        var row = table.rows[i];
+        var spent = row.cells[TIME_COL].innerHTML;
+        max = row.cells[MAX_COL].innerHTML.replace("max=", "");
+        var consumed = getSeconds(spent) / getSeconds(max);
+        remains -= consumed;
+        row.cells[PERCENT_COL].innerHTML = percent(remains);
+        row.cells[BAR_COL].innerHTML = percentBar(remains);
+      }
+
+      var result = document.getElementById("result");
+      if (remains > 0) {
+        if (max)
+          result.innerHTML = "Le lait est encore bon <u>" + getTimeString(getSeconds(max) * remains).trim() + "</u>.";
+        else
+          result.innerHTML = "Veuillez entrer les informations dans le tableau...";
+      } else {
+        result.innerHTML = "Jetez ce lait!!!";
+      }
     }
 
     function getSeconds(str) {
@@ -120,29 +152,17 @@
         str += numminutes + " minutes ";
       return str;
     }
-
-    function computeResult() {
-      var table = document.getElementById("history");
-      var remains = 1.0;
-      var max;
-      for (var i = 1; i < table.rows.length - 1; i++) {
-        var row = table.rows[i];
-        var spent = row.cells[0].innerHTML;
-        max = row.cells[2].innerHTML.replace("max=", "");
-        var consumed = getSeconds(spent) / getSeconds(max);
-        remains -= consumed;
-        row.cells[3].innerHTML = (remains * 100.0) + "%";
-      }
-
-      var result = document.getElementById("result");
-      if (remains > 0) {
-        if (max)
-          result.innerHTML = "Le lait est encore bon <u>" + getTimeString(getSeconds(max) * remains).trim() + "</u>.";
-        else
-          result.innerHTML = "Veuillez entrer les informations dans le tableau...";
-      } else {
-        result.innerHTML = "Jetez ce lait!!!";
-      }
+    
+    function percent(number) {
+      return (Math.round(number * 100.0 * 100.0) / 100.0) + "%";
+    }
+    
+    function percentBar(number) {
+      var bar = "<code>[";
+      for (var i = 10; i>0; i--)
+        bar += (i * 0.1 > number) ? "=" : ".";
+      bar += "]</code>";
+      return bar;
     }
 
   </script>
